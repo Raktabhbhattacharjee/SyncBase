@@ -9,3 +9,11 @@ wheels/
 # Virtual environments
 .venv
 .env
+
+# Personal reference files (local development)
+PROJECT_STRUCTURE.md
+WEEK_4.md
+ROADMAP.md
+WEEK_1.md
+WEEK_2.md
+WEEK_3.md
