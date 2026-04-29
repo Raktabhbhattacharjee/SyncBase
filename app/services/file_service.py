@@ -4,7 +4,7 @@ from sqlalchemy import select, func
 from app.models.file import File
 from app.models.file_version import FileVersion
 
-
+# create functionality 
 def create_file(
     db: Session, user_id: int, folder_id: int, file_name: str, metadata: dict
 ):
@@ -28,7 +28,7 @@ def create_file(
         raise ValueError("File with same name already exists in this folder")
 
     new_file = File(
-        user_id=user_id,
+        owner_id=user_id,
         folder_id=folder_id,
         name=file_name,
         is_deleted=False,
@@ -52,7 +52,7 @@ def create_file(
 
     return new_file
 
-
+# upload functionality 
 def upload_new_version(db: Session, file_id: int, metadata: dict):
 
     storage_key = metadata.get("storage_key")
@@ -94,3 +94,98 @@ def upload_new_version(db: Session, file_id: int, metadata: dict):
     db.refresh(new_version)
 
     return new_version
+
+
+# delete functionality
+
+
+def delete_file(
+    db: Session,
+    file_id: int,
+):
+    """
+    Soft delete a file.
+
+    Marks the file as deleted without removing its versions."""
+
+    
+
+    file_query = select(File).where(
+        File.id == file_id,
+        File.is_deleted.is_(False),
+    )
+
+    file = db.execute(file_query).scalar_one_or_none()
+
+    if not file:
+        raise ValueError("File not found or already deleted")
+
+    file.is_deleted = True
+
+    db.commit()
+    
+
+# restore functionality 
+
+def restore_file(
+    db: Session,
+    file_id: int,
+):
+    """
+    Restore a soft-deleted file.
+
+    Fails if another active file with the same name exists
+    in the same folder.
+
+    Args:
+        db (Session): Database session
+        file_id (int): ID of the file to restore
+
+    Returns:
+        File: Restored file
+
+    Raises:
+        ValueError:
+            - If file does not exist
+            - If file is already active
+            - If name conflict exists in folder
+    """
+
+    # 1. Get the file (must exist)
+    file_query = select(File).where(
+        File.id == file_id,
+    )
+
+    file = db.execute(file_query).scalar_one_or_none()
+
+    if not file:
+        raise ValueError("File not found")
+
+    # 2. Ensure it is actually deleted
+    if not file.is_deleted:
+        raise ValueError("File is already active")
+
+    # 3. Check for name conflict in same folder
+    conflict_query = select(File).where(
+        File.folder_id == file.folder_id,
+        File.name == file.name,
+        File.is_deleted.is_(False),
+    )
+
+    conflict_file = db.execute(conflict_query).scalar_one_or_none()
+
+    if conflict_file:
+        raise ValueError("Cannot restore: file with same name already exists")
+
+    # 4. Restore
+    file.is_deleted = False
+
+    # 5. Commit
+    db.commit()
+    db.refresh(file)
+
+    return file
+    
+    
+    
+
