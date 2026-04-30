@@ -22,7 +22,7 @@ SyncBase is a self-hosted cloud storage solution designed to provide secure file
 
 - **Python**: 3.13 or higher
 - **PostgreSQL**: 12 or higher
-- **pip**: Python package manager (comes with Python)
+- **uv**: Fast Python package installer
 - **Virtual Environment**: venv (recommended)
 
 ### Installation
@@ -57,7 +57,7 @@ SyncBase is a self-hosted cloud storage solution designed to provide secure file
 4. **Install dependencies**
 
    ```bash
-   pip install -e .
+   uv pip install -e .
    ```
 
    This installs all packages defined in `pyproject.toml`:
@@ -106,7 +106,7 @@ After installation, you can verify your setup:
 python --version
 
 # Verify dependencies are installed
-pip list
+uv pip list
 
 # Start the FastAPI development server
 uvicorn app.main:app --reload
