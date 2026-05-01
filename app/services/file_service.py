@@ -4,7 +4,8 @@ from sqlalchemy import select, func
 from app.models.file import File
 from app.models.file_version import FileVersion
 
-# create functionality 
+
+# create functionality
 def create_file(
     db: Session, user_id: int, folder_id: int, file_name: str, metadata: dict
 ):
@@ -52,7 +53,8 @@ def create_file(
 
     return new_file
 
-# upload functionality 
+
+# upload functionality
 def upload_new_version(db: Session, file_id: int, metadata: dict):
 
     storage_key = metadata.get("storage_key")
@@ -108,8 +110,6 @@ def delete_file(
 
     Marks the file as deleted without removing its versions."""
 
-    
-
     file_query = select(File).where(
         File.id == file_id,
         File.is_deleted.is_(False),
@@ -123,9 +123,10 @@ def delete_file(
     file.is_deleted = True
 
     db.commit()
-    
 
-# restore functionality 
+
+# restore functionality
+
 
 def restore_file(
     db: Session,
@@ -185,7 +186,22 @@ def restore_file(
     db.refresh(file)
 
     return file
-    
-    
-    
 
+
+#get_latest_version functionality 
+def get_latest_version(db: Session, file_id: int):
+    """
+    Return the latest FileVersion for a given file_id.
+
+    Selects the version with the highest version_number.
+    Returns None if no versions exist.
+    """
+    query = (
+        select(FileVersion)
+        .where(FileVersion.file_id == file_id)
+        .order_by(FileVersion.version_number.desc())
+        .limit(1)
+    )
+    
+    result = db.execute(query).scalar_one_or_none()
+    return result
