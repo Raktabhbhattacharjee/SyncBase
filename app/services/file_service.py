@@ -188,7 +188,7 @@ def restore_file(
     return file
 
 
-#get_latest_version functionality 
+# get_latest_version functionality
 def get_latest_version(db: Session, file_id: int):
     """
     Return the latest FileVersion for a given file_id.
@@ -202,6 +202,21 @@ def get_latest_version(db: Session, file_id: int):
         .order_by(FileVersion.version_number.desc())
         .limit(1)
     )
-    
+
     result = db.execute(query).scalar_one_or_none()
+    return result
+
+
+#
+def list_files_in_folder(db: Session, folder_id):
+    query = (
+        select(File)
+        .where(
+            File.folder_id == folder_id,
+            File.is_deleted.is_(False),
+        )
+        .order_by(File.created_at.desc())
+    )
+
+    result =db.execute(query).scalars().all()
     return result
