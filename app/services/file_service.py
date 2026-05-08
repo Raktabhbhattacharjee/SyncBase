@@ -1,8 +1,9 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import select, func
 
 from app.models.file import File
 from app.models.file_version import FileVersion
+from uuid import UUID
 
 
 # create functionality
@@ -218,5 +219,27 @@ def list_files_in_folder(db: Session, folder_id):
         .order_by(File.created_at.desc())
     )
 
-    result =db.execute(query).scalars().all()
+    result = db.execute(query).scalars().all()
     return result
+
+
+def get_file_with_versions(
+    db: Session, file_id: UUID, include_deleted: bool = False
+) -> File:
+
+    query = select(File).options(selectinload(File.versions)).where(File.id == file_id)
+
+    result = db.execute(query)
+
+    file = result.scalar_one_or_none()
+
+    if file is None:
+        raise ValueError("File not found")
+
+    if file.is_deleted and not include_deleted:
+        raise ValueError("File is deleted")
+
+    if not file.versions:
+        raise ValueError("File has no versions")
+
+    return file
